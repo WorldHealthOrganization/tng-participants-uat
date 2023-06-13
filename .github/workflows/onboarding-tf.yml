@@ -34,7 +34,7 @@ jobs:
   onboarding-tf:
     name: 'Onboarding Terraform'
     runs-on: ubuntu-latest
-    environment: dev
+    environment: uat
     env:
       TF_STATE_CONTAINER_NAME: terraform-secrets
       TF_STATE_BLOBKEY: secrets.tfstate

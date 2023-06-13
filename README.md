@@ -1,6 +1,6 @@
 # Introduction
 
-This repository contains the current onboarded key material in DEV environment for the Smart Trust Network. To be part of it, follow the instructions below. 
+This repository contains the current onboarded key material in UAT environment for the Smart Trust Network. To be part of it, follow the instructions below. 
 
 # Procedure
 
