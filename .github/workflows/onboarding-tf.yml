@@ -29,8 +29,8 @@ env:
   ARM_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID}}
   ARM_TENANT_ID: ${{secrets.AZURE_TENANT_ID}}
 
-  TF_STATE_CONTAINER_NAME: terraform-secrets
-  TF_STATE_BLOBKEY: secrets.tfstate
+  TF_STATE_CONTAINER_NAME: terraform-participants
+  TF_STATE_BLOBKEY: participants.tfstate
 
 jobs:
   onboarding-tf:
@@ -61,7 +61,7 @@ jobs:
         id: naming
         run: |
           if [ -z "${TNG_RESOURCE_GROUP_NAME}" ];  then
-            echo "missing config of github envvars in ${TF_VAR_environment} TNG_RESOURCE_GROUP_NAME[_DEV2]?)"
+            echo "Missing config of github envvars in ${TF_VAR_environment} TNG_RESOURCE_GROUP_NAME[_DEV2]?)"
             exit 1
           fi
           # compute storage account prefix from resource group and subscription
@@ -179,6 +179,11 @@ jobs:
           resource-group: ${{ env.TNG_RESOURCE_GROUP_NAME }}
           cluster-name: ${{steps.naming.outputs.aks_cluster_name}}
           # cluster-name: tngrg01-aks  # this is the hack/hotfix to target a different aks cluster
+
+#      - name: remove previous ca bundle
+#        run: |
+#          kubectl delete secret gateway-ca-bundle
+# TODO also remove the previous state!!!
 
       - name: Terraform load certificate
         working-directory: ./terraform
