@@ -156,6 +156,12 @@ jobs:
               echo "Adding $cert to ${CA_BUNDLE_FILE}"
               cat $cert >> ${CA_BUNDLE_FILE}
           done
+          for cert in $(/usr/bin/find . -path **/TLS/CA*.pem)
+          do
+              i=$(($i+1))
+              echo "Adding $cert to ${CA_BUNDLE_FILE}"
+              cat $cert >> ${CA_BUNDLE_FILE}
+          done
           echo "${{secrets.TNG_CLIENT_CERTIFICATE_CA}}" >> ${CA_BUNDLE_FILE}
           echo "##############################################################"
           echo -e  '\e[34m' Added $i Certificates to  -- $(wc  ${CA_BUNDLE_FILE}) '\e[0m'
