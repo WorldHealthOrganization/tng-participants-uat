@@ -30,7 +30,8 @@ jobs:
           git config --global user.email ${{secrets.BOT_EMAIL_GITHUB}}
           git config --global user.name ${{secrets.BOT_USER_GITHUB}}
           git config --global user.password ${{secrets.BOT_TOKEN_GITHUB}}
-
+          apt update
+          apt-get install tree -y
       - name: Onboarding
         id: Onboarding
         env:
