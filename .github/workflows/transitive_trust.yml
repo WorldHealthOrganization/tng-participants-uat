@@ -35,6 +35,7 @@ jobs:
         id: Onboarding
         env:
           GITHUB_TOKEN: ${{secrets.BOT_TOKEN_GITHUB}}
+          TRANSITIVE_TRUST: ${{var.TRANSITIVE_TRUST_SOURCE}}
           SECRETS: ${{toJSON(secrets)}}
         run: |
           sh scripts/transitiveTrust.sh
