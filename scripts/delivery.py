@@ -36,24 +36,53 @@ if __name__=='__main__':
                                      flag='😄', name='Test XX', numeric='9990', official_name='Test Country XX' )
     countries = list(pycountry.countries)
 
+    branches = os.popen("git ls-remote --heads").read()
+    print ("branches found:")
+    print(branches)
+
     for country in countries:        
         cCode = country.alpha_2
         if country.alpha_3 in doc:
             cCode= country.alpha_3
         if cCode in doc: 
-            print("Try onboarding for " + country.alpha_3)
             try:
-                os.system("rm -rf repo")
-                os.system("rm -rf temp")
-                os.system("mkdir temp")
-                os.system("echo '"+country.alpha_3 + "\n' > temp/country")
-                os.system("echo '"+doc[cCode]+ "' > temp/base64")
-                os.system("python scripts/config.py")
-                os.system("python scripts/repo.py")
-                os.system("./scripts/verify.sh 1> /dev/null")
-                os.system("python scripts/onboardingRequest.py")
-                os.system("gh pr create -B main -H " + country.alpha_3 +"/onboardingRequest --title 'Bot requested a change for "+country.alpha_3+".' --body 'Please merge the onnboarding request of "+country.alpha_3+".'")
-                os.system("git checkout main")
-                os.system("git reset --hard && git clean -f -d")
+                branchName = country.alpha_3+"/onboardingRequest"
+                
+                if not branchName in branches:
+                    os.system("echo Try onboarding for " + country.alpha_3)
+                    
+                    ################## Prepare the internal structure
+                    os.system("rm -rf repo")
+                    os.system("rm -rf temp")
+                    os.system("mkdir temp")
+                    os.system("echo '"+country.alpha_3 + "\n' > temp/country")
+                    os.system("echo '"+doc[cCode]+ "' > temp/base64")
+                    if os.system("python scripts/config.py") !=0:
+                        raise Exception("Configuration Error")
+                    
+                    if os.path.exists("sync"):  
+                    ###############  Transitive Trust
+                        os.system("./scripts/transitiveTrust.sh "+country.alpha_2)
+                        if os.system("python scripts/onboardingRequest.py ./transit/"+os.environ.get("ENV")+"/countries/"+country.alpha_2) != 0: 
+                                raise Exception("Onboarding Request failed.")
+                    else:
+                        try:       
+                            if os.system("python scripts/repo.py") != 0:
+                                raise Exception("Repository Cloning failed.")
+                            
+                            os.system("./scripts/verify.sh 1> /dev/null")
+                            
+                            if os.system("python scripts/onboardingRequest.py repo") != 0:
+                                raise Exception("Onboarding Request failed.")
+                        except Exception as Error:
+                            os.system("echo 'Error occoured for onboarding request " + country.alpha_3 +": "+str(Error)+"'") 
+                        
+                        ######### Create PR 
+                    os.system("./scripts/createPR.sh "+country.alpha_3)
+                
+                    os.system("git checkout main > /dev/null 2>&1")
+                    os.system("git reset --hard && git clean -f -d > /dev/null 2>&1")
+                else:
+                    os.system("echo Skip "+country.alpha_3 + "Branch already exist merge the branch or delete the branch.")
             except Exception as Error:
-                print("Error occoured for onboarding " + country.alpha_3 +": "+ Error)
+                os.system("echo 'Error occoured for onboarding " + country.alpha_3 +": "+ str(Error)+"'")

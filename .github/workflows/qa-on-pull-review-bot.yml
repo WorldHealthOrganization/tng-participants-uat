@@ -1,0 +1,31 @@
+# This workflow will install Python dependencies and run tests 
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Review Bot
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited , review_request_removed]
+jobs:
+  transitive-trust-failure-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    if: contains(github.head_ref, 'onboardingRequest')
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install flake8 pytest
+        if [ -f scripts/requirements.txt ]; then pip install -r scripts/requirements.txt; fi
+    - name: Review PR
+      env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          BRANCH: ${{  github.head_ref }}
+      run: |
+        python ./scripts/review.py
+

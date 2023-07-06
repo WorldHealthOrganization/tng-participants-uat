@@ -39,12 +39,12 @@ CURRDIR=$PWD
 
 
 declare -A USAGETOSIGNINGCA=(
- #[TLS]="$CASDIR/cas/TLS/certs/TNG_TLS.pem"
+# [TLS]="$CASDIR/cas/TLS/certs/TNG_TLS.pem"
  [TLS]="$CASDIR/cas/TA/certs/TNG_TA.pem"
  [TA]="$CASDIR/cas/TA/certs/TNG_TA.pem"
 )
 declare -A USAGETOSIGNINGKEY=(
- #[TLS]="$CASDIR/cas/TLS/private/TNG_TLS.key.pem"
+ #[TLS]="$CASDIR/cas/TLS/private/TNG_TLS.key.pem"	
  [TLS]="$CASDIR/cas/TA/private/TNG_TA.key.pem"
  [TA]="$CASDIR/cas/TA/private/TNG_TA.key.pem"
 )
@@ -141,27 +141,29 @@ do
 		    COUNTRYNAME=`openssl x509 -in ${CERTPATH} -noout -subject -nameopt multiline | grep countryName | awk -F'=' '{print $2}'  | sed 's/\s*//'`
 		    if [ ! -z ${COUNTRYNAME} ]; then
 			echo "           Text Output At ${COUNTRYNAME}: $SIGNEDTXTPATH"
-			echo TrustAnchor Signature:\
-			     > $SIGNEDTXTPATH
+			echo '{' > $SIGNEDTXTPATH
+			echo -n '"TrustAnchorSignature": "' >> $SIGNEDTXTPATH
 			#echo `openssl x509 -outform der -inform $CERT -out $SIGNEDDIR/${CERT}.der`
 			openssl x509 -outform der -in ${CERTPATH} -out $SIGNEDDIR/${CERT}.der
 			openssl cms -sign -nodetach -in $SIGNEDDIR/${CERT}.der -signer $SIGNINGCA -inkey $SIGNINGKEY -out $SIGNEDDIR/${CERT}_signed.der -outform DER -binary
 			#echo `openssl base64 in $SIGNEDDIR/${CERT}_signed.der -out -out signed.b64 -e -A` 
-			echo `openssl enc -base64 -in $SIGNEDDIR/${CERT}_signed.der  -e -a -A | sed -z 's/\n*//g' | sed -z 's/\s*//g' ` \
+			echo -n `openssl enc -base64 -in $SIGNEDDIR/${CERT}_signed.der  -e -a -A | sed -z 's/\n*//g' | sed -z 's/\s*//g' ` \
 			     >>  $SIGNEDTXTPATH
-			echo >> $SIGNEDTXTPATH
+			echo '",' >>  $SIGNEDTXTPATH
 			#	echo `openssl x509 -in ${SIGNEDCERTPATH} -outform DER -fingerprint -sha256 -noout | awk -F'=' '{print $2}'  | sed 's/://g' | sed 's/[A-Z]/\L&/g'` \
 			    #>>  $SIGNEDTXTPATH
-			echo Certificate Raw Data: >> $SIGNEDTXTPATH
-			echo `openssl x509 -in ${CERTPATH}  | tail -n +2 | head -n -1 | sed -z 's/\n*//g' | sed -z 's/\s*//g' ` \
+			echo -n  '"CertificateRawData": "' >> $SIGNEDTXTPATH
+			echo -n `openssl x509 -in ${CERTPATH}  | tail -n +2 | head -n -1 | sed -z 's/\n*//g' | sed -z 's/\s*//g' ` \
 			     >> $SIGNEDTXTPATH
-			echo >>  $SIGNEDTXTPATH
-			echo Certificate Thumbprint: >>  $SIGNEDTXTPATH
-			echo `openssl x509 -in ${CERTPATH} -fingerprint -sha256 -noout | awk -F'=' '{print $2}' | sed 's/://g' | sed 's/[A-Z]/\L&/g' ` \
+			echo '",' >>  $SIGNEDTXTPATH
+			echo -n '"CertificateThumbprint": "' >>  $SIGNEDTXTPATH
+			echo -n `openssl x509 -in ${CERTPATH} -fingerprint -sha256 -noout | awk -F'=' '{print $2}' | sed 's/://g' | sed 's/[A-Z]/\L&/g' ` \
 			     >>  $SIGNEDTXTPATH
-			echo >>  $SIGNEDTXTPATH
-			echo Certificate Country: $COUNTRYNAME \
-			     >>  $SIGNEDTXTPATH  
+			echo '",' >>  $SIGNEDTXTPATH
+			echo -n '"CertificateCountry": "'$COUNTRYNAME \
+			     >>  $SIGNEDTXTPATH
+			echo '"' >>  $SIGNEDTXTPATH
+			echo -n '}' >>  $SIGNEDTXTPATH
 		    else 
 			echo "           Skipping Text Output"
 		    fi

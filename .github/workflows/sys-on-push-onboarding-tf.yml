@@ -1,0 +1,193 @@
+name: 'Onboarding using terraform'
+on:
+  workflow_dispatch:
+# Special permissions required for OIDC authentication
+  push:
+    branches:
+      - main
+permissions:
+  id-token: write
+# These GitHub environment secrets are used by the terraform azure provider which has been configured using OIDC authentication.
+# AZURE_CLIENT_ID  - id of the app registration
+# in the  Certificates & secrets we find the federated credentials to trigger a workflow in GitHub
+# repo:WorldHealthOrganization/tng-participants-dev:environment:dev
+# AZURE_SUBSCRIPTION_ID & AZURE_TENANT_ID describe the cloud section
+# WHO azure subscription is  c9e69bd2-42a5-4900-b641-c52d3e31639a
+
+# in the  portal.azure.com ..  App Registrations/<SC-RG-NAME>/Certificates & secrets we find the federated credentials to trigger a workflow in github
+# repo:WorldHealthOrganization/tng-iac:ref:refs/heads/dev
+# repo:WorldHealthOrganization/tng-iac:ref:refs/heads/uat
+
+# the github environment variable TNG_RESOURCE_GROUP_NAME determines the target resource group for this provisioning
+# and has to match the RG configured for the app registration
+
+env:
+  TF_VAR_environment: dev
+  TNG_RESOURCE_GROUP_NAME: ${{vars.TNG_RESOURCE_GROUP_NAME}}
+#  AZURE_APPREG_SECRET: ${{secrets.AZURE_APPREG_SECRET}}
+  ARM_CLIENT_ID: ${{secrets.AZURE_CLIENT_ID}}
+  ARM_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+  ARM_TENANT_ID: ${{secrets.AZURE_TENANT_ID}}
+
+  TF_STATE_CONTAINER_NAME: terraform-participants
+  TF_STATE_BLOBKEY: participants.tfstate
+
+jobs:
+  onboarding-tf:
+    name: 'Onboarding Terraform'
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - name: 'Az CLI login'
+        uses: azure/login@v1
+        with:
+          client-id: ${{env.ARM_CLIENT_ID}}
+          tenant-id: ${{env.ARM_TENANT_ID}}
+          subscription-id: ${{env.ARM_SUBSCRIPTION_ID}}
+
+      # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
+
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v1.0.1
+        with:
+          version: '1.6'
+          force: false
+
+      - name: 'prepare naming from subscription and resource group'
+        id: naming
+        run: |
+          if [ -z "${TNG_RESOURCE_GROUP_NAME}" ];  then
+            echo "Missing config of github envvars in ${TF_VAR_environment} TNG_RESOURCE_GROUP_NAME[_DEV2]?)"
+            exit 1
+          fi
+          # compute storage account prefix from resource group and subscription
+          AZ_SUBSCRIPTION=$(az account show | jq -r .name)
+          SUBSCRIPTION=${AZ_SUBSCRIPTION:0:6};SUBSCR=${SUBSCRIPTION//_/};sub=$(echo ${SUBSCR} | tr '[:upper:]' '[:lower:]')
+          TNG_RESOURCE_GROUP="${TNG_RESOURCE_GROUP_NAME:0:14}";SRG=${TNG_RESOURCE_GROUP//-/};lcRG=$(echo ${SRG} | tr '[:upper:]' '[:lower:]')
+          if [ "${sub:0:3}" = "${lcRG:0:3}" ];then
+            prefix="${lcRG:0:11}" # no double sub prefix
+          else
+            prefix="${sub:0:4}${lcRG:0:11}"
+          fi
+          # use in SAs
+          storage_account_cdn="${prefix}cdnstore"
+          storage_account_tf="${prefix}tfstate"
+
+          echo "storage_account_terraform=${storage_account_tf}" >> $GITHUB_OUTPUT
+          echo TF_VAR_storage_account_name_cdn="${storage_account_cdn}" >> $GITHUB_ENV
+          echo TF_VAR_storage_account_name_tf="${storage_account_tf}" >> $GITHUB_ENV
+
+          echo TF_VAR_subscription="${AZ_SUBSCRIPTION}" >> $GITHUB_ENV
+          echo TF_VAR_service_principal_appid="${ARM_CLIENT_ID}" >> $GITHUB_ENV
+          echo TF_VAR_prefix="${prefix}" >> $GITHUB_ENV
+          echo TF_VAR_environment="${TF_VAR_environment}"  >> $GITHUB_ENV
+
+          # compute resource instance suffix from resource group
+          INSTANCE=$(echo "${TNG_RESOURCE_GROUP_NAME}" | sed -e 's/TNG-\(.\)-CHN-RG\(..\)/\L\1\2/')
+          echo TF_VAR_instance="${INSTANCE}" >> $GITHUB_ENV
+
+          # aks cluster name for authentication below and prefix and instance
+
+          echo prefix="${prefix}" >> $GITHUB_OUTPUT
+          echo instance="${INSTANCE}" >> $GITHUB_OUTPUT
+          echo "aks_cluster_name=aks-${INSTANCE}" >> $GITHUB_OUTPUT
+
+          echo "SUB=$sub; RG=$lcRG;  final-prefix=$prefix; instance=$INSTANCE;"
+
+      - name: Create Storage Account If Needed
+        env:
+          TF_STATE_STORAGE_ACCOUNT: ${{steps.naming.outputs.storage_account_terraform}}
+        run: |
+          echo "############################################################## creating  ${TF_STATE_STORAGE_ACCOUNT} if needed"
+          if [ "$(az storage account check-name --name ${TF_STATE_STORAGE_ACCOUNT} --auth-mode login| jq -r .nameAvailable)" = "true" ]
+          then
+            if az storage account create --resource-group ${TNG_RESOURCE_GROUP_NAME} --name ${TF_STATE_STORAGE_ACCOUNT} --sku Standard_LRS --encryption-services blob
+            then
+              echo created storage account create --resource-group ${TNG_RESOURCE_GROUP_NAME} --name ${TF_STATE_STORAGE_ACCOUNT}
+            else
+              echo "storage account creation FAILED FOR --resource-group ${TNG_RESOURCE_GROUP_NAME} --name ${TF_STATE_STORAGE_ACCOUNT}"
+            fi
+          else
+            echo -e  '\e[31m' found ${TF_STATE_STORAGE_ACCOUNT} '\e[0m'
+          fi
+      - name: Create Storage Container If Needed
+        env:
+          TF_STATE_STORAGE_ACCOUNT: ${{steps.naming.outputs.storage_account_terraform}}
+        run: |
+          echo "############################################################## creating ${TF_STATE_CONTAINER_NAME} in ${TF_STATE_STORAGE_ACCOUNT} if needed"
+          if [ "$(az storage container exists --name ${TF_STATE_CONTAINER_NAME} --account-name ${TF_STATE_STORAGE_ACCOUNT}| jq -r .exists)" = "true" ]
+          then
+            echo -e  '\e[31m' Storage container ${TF_STATE_CONTAINER_NAME} exists'\e[0m'
+          else
+            az storage container create --name ${TF_STATE_CONTAINER_NAME} --account-name ${TF_STATE_STORAGE_ACCOUNT} --auth-mode login
+            echo -e  '\e[32m' Storage container ${TF_STATE_CONTAINER_NAME} created'\e[0m'
+          fi
+          echo "##############################################################"
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+      - name: Terraform Init
+        env:
+          TF_STATE_STORAGE_ACCOUNT: ${{steps.naming.outputs.storage_account_terraform}}
+        working-directory: ./terraform
+        run: |
+          terraform init \
+          -backend-config="resource_group_name=${TNG_RESOURCE_GROUP_NAME}" \
+          -backend-config="storage_account_name=${TF_STATE_STORAGE_ACCOUNT}" \
+          -backend-config="container_name=${TF_STATE_CONTAINER_NAME}" \
+          -backend-config="key=${TF_STATE_BLOBKEY}" \
+          -backend-config="use_oidc=true"
+
+      - name: Create  CA-Bundle from country certs
+        env:
+          CA_BUNDLE_FILE: ca-bundle.crt
+        run: |
+          truncate --size 0 ${CA_BUNDLE_FILE}
+          echo "Building CA_BUNDLE_FILE"
+          i=1
+          for cert in $(/usr/bin/find . -path **/TLS/CA*.pem)
+          do
+              i=$(($i+1))
+              echo "Adding $cert to ${CA_BUNDLE_FILE}"
+              cat $cert >> ${CA_BUNDLE_FILE}
+          done
+          echo "${{secrets.TNG_ROOT_CA}}" >> ${CA_BUNDLE_FILE}
+          echo "##############################################################"
+          echo -e  '\e[34m' Added $i Certificates to  -- $(wc  ${CA_BUNDLE_FILE}) '\e[0m'
+          echo "##############################################################"
+          # we just write this into the GITHUB_ENV and use it from there
+          echo TF_VAR_ca_bundle_b64="$(base64 -w 0 ${CA_BUNDLE_FILE})" >> $GITHUB_ENV
+
+      # Use kubelogin to configure your kubeconfig for Azure auth
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.0.25'
+
+      - name: Setup kubectl
+        id: install-kubectl
+        uses: azure/setup-kubectl@v3
+
+      - name: Set context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: ${{ env.TNG_RESOURCE_GROUP_NAME }}
+          cluster-name: ${{steps.naming.outputs.aks_cluster_name}}
+          # cluster-name: tngrg01-aks  # this is the hack/hotfix to target a different aks cluster
+
+      # also remove the previous state!!!
+      - name: remove previous ca bundle
+        working-directory: ./terraform
+        run: |
+          kubectl delete secret gateway-ca-bundle || true
+          terraform state rm kubernetes_secret.gateway_ca_bundle || true
+
+      - name: Terraform load certificate
+        working-directory: ./terraform
+        run: |
+          terraform apply -auto-approve
