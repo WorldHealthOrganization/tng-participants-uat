@@ -9,8 +9,8 @@ cd $ENV
 mkdir signing 
 cd signing
 echo $PWD
-echo "$NB_UP_SIGNING_PUB" > pub-key.pem
-echo "$NB_UP_SIGNING_KEY" > priv-key.pem
+echo -n "${NB_UP_SIGNING_PUB}" > pub-key.pem
+echo -n "${NB_UP_SIGNING_KEY}" > priv-key.pem
 cd .. 
 cd ..
 echo $PWD
