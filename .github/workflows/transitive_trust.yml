@@ -35,6 +35,8 @@ jobs:
         id: Onboarding
         env:
           GITHUB_TOKEN: ${{secrets.BOT_TOKEN_GITHUB}}
+          NB_UP_SIGNING_KEY: ${{secrets.NB_UP_SIGNING_KEY}}
+          NB_UP_SIGNING_PUB: ${{secrets.NB_UP_SIGNING_PUB}}
           TRANSITIVE_TRUST: ${{vars.TRANSITIVE_TRUST_SOURCE}}
           SECRETS: ${{toJSON(secrets)}}
         run: |
