@@ -6,7 +6,7 @@ rm -rf transit
 git clone https://$GITHUB_TOKEN@$TRANSITIVE_TRUST transit
 tree
 cd transit
-cd UAT
+cd $ENV
 mkdir signing 
 cd signing
 echo $PWD
@@ -16,7 +16,7 @@ echo -n "${NB_UP_SIGNING_KEY}" > priv-key.pem
 cd .. 
 cd ..
 echo $PWD
-./extract.sh UAT    
+./extract.sh $ENV $1 
 cd ..
 echo "Finished Transitive Trust"
 tree
