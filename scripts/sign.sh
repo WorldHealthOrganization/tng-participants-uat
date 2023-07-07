@@ -129,14 +129,14 @@ do
 		    CSRPATH=$SIGNEDDIR/$CSR
 		    echo "        Signing CERT $KEY with $SIGNINGCA "
 		    echo "           x509 Output At: $SIGNEDCERTPATH"
-
+			if [ ${CERTPATH} != "*UP" ]; then
 		    cd $CASDIR
 		    SUBJ=$(openssl x509 -in ${CERTPATH} -noout -subject --nameopt multiline | tail -n +2 | sed 's/^\s*/\//' | sed 's/\s*=\s*/=/' |sed -z 's/\n//g')
 		    openssl req -out ${CSRPATH} -key ${SIGNINGKEY} -new  -subj "${SUBJ}" 
 		    openssl ca -batch -create_serial -config $SIGNINGCFG -cert $SIGNINGCA -keyfile $SIGNINGKEY \
 			    -in $CSRPATH -out $SIGNEDCERTPATH   -subj "${SUBJ}"  2>&1 | sed 's/^/            | /g'
 		    cd $CURRDIR
-
+			fi
 
 		    COUNTRYNAME=`openssl x509 -in ${CERTPATH} -noout -subject -nameopt multiline | grep countryName | awk -F'=' '{print $2}'  | sed 's/\s*//'`
 		    if [ ! -z ${COUNTRYNAME} ]; then
