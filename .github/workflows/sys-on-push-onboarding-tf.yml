@@ -22,7 +22,7 @@ permissions:
 # and has to match the RG configured for the app registration
 
 env:
-  TF_VAR_environment: dev
+  TF_VAR_environment: ${{ env.ENV_CONTEXT_VAR }}
   TNG_RESOURCE_GROUP_NAME: ${{vars.TNG_RESOURCE_GROUP_NAME}}
 #  AZURE_APPREG_SECRET: ${{secrets.AZURE_APPREG_SECRET}}
   ARM_CLIENT_ID: ${{secrets.AZURE_CLIENT_ID}}
@@ -36,7 +36,7 @@ jobs:
   onboarding-tf:
     name: 'Onboarding Terraform'
     runs-on: ubuntu-latest
-    environment: dev
+    environment: ${{ env.ENV_CONTEXT_VAR }}
     steps:
       - name: 'Az CLI login'
         uses: azure/login@v1
