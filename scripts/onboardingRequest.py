@@ -35,6 +35,18 @@ os.system("[ -d "+country + "/onboarding/DCC/auth"+" ] && mv " + country + "/onb
 os.system("[ -d "+country + "/onboarding/DCC/csca"+" ] && mv " + country + "/onboarding/DCC/csca "+ country+"/onboarding/DCC/SCA")
 os.system("[ -d "+country + "/onboarding/DCC/up"+" ] && mv " + country + "/onboarding/DCC/up "+ country+"/onboarding/DCC/UP")
 os.system("[ -f "+country + "/onboarding/DCC/SCA/CSCA.pem"+" ] && mv " + country + "/onboarding/DCC/SCA/CSCA.pem "+ country+"/onboarding/DCC/SCA/SCA.pem")
+
+##### Try to sign it
+
+path = "./sign/cas/TA/private/TNG_TA.key.pem"        
+if os.path.isfile(path):      
+    os.system("echo Start signing for " + country)
+    os.system("./scripts/signing/sign-json.sh ./sign " +country)
+else: 
+     os.system("echo No secret for TA found. Skip signing.")
+
+####################
+
 os.system("git add "+ country + " > /dev/null 2>&1")
 
 result = os.popen("git commit -m 'Bot added Files from "+country+"'").read()

@@ -76,8 +76,8 @@ if __name__=='__main__':
                                 raise Exception("Onboarding Request failed.")
                         except Exception as Error:
                             os.system("echo 'Error occoured for onboarding request " + country.alpha_3 +": "+str(Error)+"'") 
-                        
-                        ######### Create PR 
+               
+                    ######### Create PR 
                     os.system("./scripts/createPR.sh "+country.alpha_3)
                 
                     os.system("git checkout main > /dev/null 2>&1")
