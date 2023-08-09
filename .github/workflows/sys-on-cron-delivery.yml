@@ -17,7 +17,7 @@ jobs:
   build:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
-
+    environment: dev
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -36,7 +36,18 @@ jobs:
           git config --global user.password ${{secrets.BOT_TOKEN_GITHUB}}
           git config --global pull.rebase true
           git config --global branch.autosetuprebase always
-
+      - name: Prepare Signing
+        id: Signing
+      
+        env: 
+          SIGN_TA_KEY: ${{secrets.TNG_TA_PRIVATE_KEY}}
+          SIGN_TA_PEM: ${{secrets.TNG_TA_CA}}
+        run: |
+          mkdir -p sign/cas/TA/certs
+          mkdir -p sign/cas/TA/private
+          cp ./scripts/signing/openssl.conf sign/cas/TA/openssl.conf
+          echo "${{env.SIGN_TA_PEM}}" > sign/cas/TA/certs/TNG_TA.pem
+          echo "${{env.SIGN_TA_KEY}}" > sign/cas/TA/private/TNG_TA.key.pem
       - name: Onboarding
         id: Onboarding
         env:
