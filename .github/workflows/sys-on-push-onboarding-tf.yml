@@ -52,11 +52,8 @@ jobs:
           terraform_wrapper: false
 
       - name: 'Setup jq'
-        uses: dcarbone/install-jq-action@v1.0.1
-        with:
-          version: '1.6'
-          force: false
-
+        run: sudo apt update && sudo apt install -y jq
+        
       - name: 'prepare naming from subscription and resource group'
         id: naming
         run: |
