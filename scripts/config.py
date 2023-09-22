@@ -19,3 +19,11 @@ else:
     os.system("echo 'https://"+os.environ.get("BOT_TOKEN_GITHUB")+"@"+d["repo"] + "' > temp/repo")
     for key in d["keys"]:          
         os.system("echo '"+key + "' >> temp/gpg")
+        
+# prepare signing
+        
+os.system("mkdir -p sign/cas/TA/certs")
+os.system("mkdir -p sign/cas/TA/private")
+os.system("cp ./scripts/signing/openssl.conf sign/cas/TA/openssl.conf")
+os.system("echo '"+os.environ.get("SIGN_TA_PEM")+"' > sign/cas/TA/certs/TNG_TA.pem")
+os.system("echo '"+os.environ.get("SIGN_TA_KEY")+"' > sign/cas/TA/private/TNG_TA.key.pem")

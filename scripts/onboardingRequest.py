@@ -36,6 +36,9 @@ os.system("[ -d "+country + "/onboarding/DCC/csca"+" ] && mv " + country + "/onb
 os.system("[ -d "+country + "/onboarding/DCC/up"+" ] && mv " + country + "/onboarding/DCC/up "+ country+"/onboarding/DCC/UP")
 os.system("[ -f "+country + "/onboarding/DCC/SCA/CSCA.pem"+" ] && mv " + country + "/onboarding/DCC/SCA/CSCA.pem "+ country+"/onboarding/DCC/SCA/SCA.pem")
 
+if not os.path.exists("TT_API_ACCESS"):
+      os.system("rm -rf "+country+"/onboarding/DCC/TLS")
+
 ##### Try to sign it
 
 path = "./sign/cas/TA/private/TNG_TA.key.pem"        
@@ -55,3 +58,5 @@ if not "nothing added to commit" in result:
   os.system("git push -f -u origin "+ branchName +" > /dev/null 2>&1")
 
 #> /dev/null 2>&1
+
+os.system("tree")
