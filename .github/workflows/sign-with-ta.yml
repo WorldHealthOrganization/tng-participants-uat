@@ -1,0 +1,60 @@
+# This is a workflow to support automated signing with TNG Trust Anchor for DEV and UAT environments.
+
+name: Sign certificates with TNG Trust Anchor (DEV/UAT)
+on:
+  workflow_dispatch: #manual trigger
+    inputs:
+      environment:
+        description: 'Environment to run the deployment against'
+        type: environment
+        required: true
+      country_alpha3:
+        description: 'Country to run the singing for'
+        type: string
+        required: false
+      dry_run:
+        description: 'Run workflow without pushing to GitHub'
+        type: boolean
+        required: false
+
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
+env:
+  BOT_EMAIL: ${{secrets.BOT_EMAIL_GITHUB}}
+  TNG_TA_PRIVATE_KEY: ${{secrets.TNG_TA_PRIVATE_KEY}}
+  TNG_TA_CA: ${{secrets.TNG_TA_CA}}
+
+
+jobs:
+  tng_ta_sign:
+    name: 'TNG TA Sign for DEV and UAT'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Sign
+        run: |
+          mkdir -p ./cas/TA/private
+          mkdir -p ./cas/TA/certs
+          cp ./scripts/signing/openssl.conf ./cas/TA/openssl.conf
+          echo "${{env.TNG_TA_PRIVATE_KEY}}" > ./cas/TA/private/TNG_TA.key.pem
+          echo "${{env.TNG_TA_CA}}" > ./cas/TA/certs/TNG_TA.pem
+          ./scripts/signing/sign-json.sh ./ ${{inputs.country_alpha3}}
+          rm -rf ./cas
+
+      - name: push changes
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config --global user.name 'tng-bot-dev'
+          git config --global user.email '$BOT_EMAIL'
+          git add .
+          git commit -m "Signed with TNG Trust Anchor"
+          git push
