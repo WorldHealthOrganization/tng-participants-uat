@@ -34,8 +34,10 @@ if __name__=='__main__':
                                      flag='😄', name='Test XY', numeric='9989', official_name='Test Country XY' )
     add_country(pycountry.countries, alpha_2='XX', alpha_3='XXX', common_name='Test XA', 
                                      flag='😄', name='Test XX', numeric='9990', official_name='Test Country XX' )
-    add_country(pycountry.countries, alpha_2='XO', alpha_3='XXO', common_name='Test XO', 
-                                     flag='😄', name='Test XO', numeric='9991', official_name='Test Country XO' )
+    add_country(pycountry.countries, alpha_2='XL', alpha_3='XCL', common_name='Test LAC (XL, XCL)',
+                                     flag='😄', name='Test XL', numeric='9991', official_name='Test Country XL' )
+    add_country(pycountry.countries, alpha_2='XO', alpha_3='XXO', common_name='Test XO',
+                                     flag='😄', name='Test XO', numeric='9992', official_name='Test Country XO' )
     countries = list(pycountry.countries)
 
     branches = os.popen("git ls-remote --heads").read()
@@ -62,6 +64,11 @@ if __name__=='__main__':
                     if os.system("python scripts/config.py") !=0:
                         raise Exception("Configuration Error")
                     
+                    tt_api_access = cCode + "_TT_API_ACCESS"
+                    
+                    if tt_api_access in doc:
+                        os.system("touch TT_API_ACCESS")
+                      
                     if os.path.exists("sync"):  
                     ###############  Transitive Trust
                         os.system("./scripts/transitiveTrust.sh "+country.alpha_2)
