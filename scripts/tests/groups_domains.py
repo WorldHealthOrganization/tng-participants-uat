@@ -3,7 +3,7 @@ def test_valid_group(cert):
     'The group in the path name must be valid'
     group = cert.pathinfo.get('group')
     assert group, 'Certificate at incorrect location'
-    assert group.upper() in ('UP', 'SCA', 'TLS'), 'Invalid group: ' + group
+    assert group.upper() in ('UP', 'SCA', 'TLS', 'DECA'), 'Invalid group: ' + group
 
 def test_valid_domain(cert):
     'The domain in the path name must be valid'
