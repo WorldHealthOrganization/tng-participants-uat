@@ -8,7 +8,8 @@ def test_extended_key_usages(cert):
     """Extended key usage for TLS and UP certs must be set"""
     if cert.pathinfo.get('group').upper() == 'SCA'\
     or cert.pathinfo.get('group').upper() == 'UP'\
-    or cert.pathinfo.get('group').upper() == 'TLS' and cert.pathinfo.get('filename').upper().startswith('CA'):
+    or cert.pathinfo.get('group').upper() == 'TLS' and cert.pathinfo.get('filename').upper().startswith('CA') \
+    or cert.pathinfo.get('group').upper() == 'DECA':
         #pytest.skip(reason='CA/SCA or UP certs do not require extended key usage')
         return # Pass: CA/SCA or UP certs do not require extended key usage
 
