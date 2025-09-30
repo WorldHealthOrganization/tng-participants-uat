@@ -54,6 +54,8 @@ if __name__=='__main__':
                                      flag='😄', name='Test XV', numeric='9999', official_name='Test Country XV' )
     add_country(pycountry.countries, alpha_2='YK', alpha_3='XYK', common_name='Test YK',
                                      flag='😄', name='Test YK', numeric='10000', official_name='Test Country YK' )
+    add_country(pycountry.countries, alpha_2='IO', alpha_3='IOM', common_name='Test IO',
+                                     flag='😄', name='Test IO', numeric='10001', official_name='Test Country IO' )
     countries = list(pycountry.countries)
 
     branches = os.popen("git ls-remote --heads").read()
