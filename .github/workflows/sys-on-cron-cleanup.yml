@@ -21,7 +21,7 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Delete workflow runs
-        uses: SchulzeStTSI/delete-workflow-runs@main
+        uses: Mattraks/delete-workflow-runs@0073229620e676f1b9d933b31b2b53df8b5915ef #v2.1.0
         with:
           token: ${{ github.token }}
           repository: ${{ github.repository }}
