@@ -12,9 +12,9 @@ jobs:
       fail-fast: false
     if: contains(github.head_ref, 'onboardingRequest')
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
     - name: Set up Python 
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c #v6.0.0
       with:
         python-version: '3.10'
     - name: Install dependencies
@@ -32,7 +32,7 @@ jobs:
       run: |
         pytest -vs scripts/tests/test_certs.py --country-mode -C ${{ github.head_ref }} --tb=short -rfEx --md-report --md-report-verbose=1 --md-report-zeros=number --html=tng_onboarding_qa.html --self-contained-html --junit-xml=pytest.xml
     - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action/composite@v2
+      uses: EnricoMi/publish-unit-test-result-action/composite@34d7c956a59aed1bfebf31df77b8de55db9bbaaf #v2.21.0
       if: always()
       with:
         files: |
