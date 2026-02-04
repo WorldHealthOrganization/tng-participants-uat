@@ -61,7 +61,7 @@ jobs:
       - name: Decrypt files
         run: |
           mkdir -p decrypted
-          for file in participants-secrets/dev/*.pgp; do
+          for file in participants-secrets/uat/*.pgp; do
             filename=$(basename -- "$file")
             base=${filename%.pgp}
             if [[ $base =~ ^[A-Z]{3}$ ]]; then
