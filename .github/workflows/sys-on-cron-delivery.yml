@@ -98,7 +98,7 @@ jobs:
           ENV: ${{vars.ENV}}
           SIGN_TA_KEY: ${{secrets.TNG_TA_PRIVATE_KEY}}
           SIGN_TA_PEM: ${{secrets.TNG_TA_CA}}
-          #ALLOWED_DOMAINS: ${{vars.ALLOWED_DOMAINS}}
+          ALLOWED_DOMAINS: ${{vars.ALLOWED_DOMAINS}}
         run: |
         
           python scripts/delivery.py
