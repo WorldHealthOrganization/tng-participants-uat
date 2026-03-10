@@ -23,8 +23,19 @@ def add_country(db, **params):
 # Demo
 
 if __name__=='__main__':
+
+	try:
+        with open('scripts/countries.json', 'r') as file:
+            doc = json.load(file)
+        print("Successfully loaded countries.json.")
+    except FileNotFoundError:
+        print("Error: 'countries.json' file not found.", file=sys.stderr)
+        sys.exit(1) 
+    except json.JSONDecodeError:
+        print("Error: 'countries.json' contains invalid JSON.", file=sys.stderr)
+        sys.exit(1) 
         
-    doc = json.loads(os.environ.get("SECRETS"), strict=False)
+   
     
     add_country(pycountry.countries, alpha_2='XA', alpha_3='XXA', common_name='Test XA', 
                                      flag='😄', name='Test XA', numeric='23233', official_name='Test Country XA' ) 
@@ -60,7 +71,15 @@ if __name__=='__main__':
                                      flag='😄', name='Test XT', numeric='10002', official_name='Test Country XT' )
     countries = list(pycountry.countries)
 
-    branches = os.popen("git ls-remote --heads").read()
+	# Fix pOpen Handling to stop PR Creation when git fails with errors
+    p = os.popen("git ls-remote --heads")
+    branches =p.read()
+    status = p.close()
+    if status is not None:
+            print("Skip Process because git is not properly responding")
+            sys.exit(1)
+    
+    print("Status:" , status)
     print ("branches found:")
     print(branches)
 
