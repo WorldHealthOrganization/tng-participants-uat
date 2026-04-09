@@ -67,7 +67,7 @@ if __name__=='__main__':
                                      flag='😄', name='Test XT', numeric='10002', official_name='Test Country XT' )
     countries = list(pycountry.countries)
 
-	# Fix pOpen Handling to stop PR Creation when git fails with errors
+    # Fix pOpen Handling to stop PR Creation when git fails with errors
     p = os.popen("git ls-remote --heads")
     branches =p.read()
     status = p.close()
