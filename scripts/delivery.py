@@ -65,6 +65,8 @@ if __name__=='__main__':
                                      flag='😄', name='Test IO', numeric='10001', official_name='Test Country IO' )
     add_country(pycountry.countries, alpha_2='XT', alpha_3='XXT', common_name='Test XT',
                                      flag='😄', name='Test XT', numeric='10002', official_name='Test Country XT' )
+    add_country(pycountry.countries, alpha_2='XQ', alpha_3='XXQ', common_name='Test XQ',
+                                     flag='😄', name='Test XQ', numeric='10003', official_name='Test Country XQ' )
     countries = list(pycountry.countries)
 
     # Fix pOpen Handling to stop PR Creation when git fails with errors
