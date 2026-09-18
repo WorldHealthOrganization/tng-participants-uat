@@ -1,0 +1,21 @@
+{
+    "@context": [
+        "https://www.w3.org/ns/did/v1",
+        "https://w3id.org/security/suites/jws-2020/v1"
+    ],
+    "id": "did:web:raw.githubusercontent.com:WorldHealthOrganization:tng-participants-uat:main:WHO:signing:DID",
+    "controller": "did:web:raw.githubusercontent.com:WorldHealthOrganization:tng-participants-uat:main:WHO:signing:DID",
+    "verificationMethod": [
+        {
+            "id": "did:web:raw.githubusercontent.com:WorldHealthOrganization:tng-participants-uat:main:WHO:signing:DID",
+            "type": "JsonWebKey2020",
+            "controller": "did:web:raw.githubusercontent.com:WorldHealthOrganization:tng-participants-uat:main:WHO:signing:DID",
+            "publicKeyJwk": {
+                "kty": "EC",
+                "crv": "P-256",
+                "x": "VgS8MAfbsTcXnfKr-dRjnfumq7UP91ntO1cOlQ4hmrI",
+                "y": "2ryjnUatlK3kwDE_LHK7vFiQRJKPxKn31-KjYZlGrIE"
+            }
+        }
+    ]
+}
